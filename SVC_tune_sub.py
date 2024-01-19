@@ -5,8 +5,6 @@ Created on Thu Jan 11 21:13:20 2024
 Solution of MNIST recognition problem with the principal component analysis
 and the support vector classifier. Kaggle dataset.
 
-Yet another comment
-
 @author: ganchenko
 """
 
