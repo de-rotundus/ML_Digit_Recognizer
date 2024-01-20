@@ -17,7 +17,7 @@ from matplotlib import pyplot as plt
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset, random_split, Subset
+from torch.utils.data import DataLoader, Dataset, random_split
 
 from sklearn.metrics import confusion_matrix
 from matplotlib.colors import LogNorm
@@ -96,12 +96,12 @@ def train_model(train_data, dev_data, model, device=torch.device('cpu'), lr=0.01
         print("-------------\nEpoch {}:\n".format(epoch))
 
         # Run **training***
-        loss, acc = run_epoch(train_data, model.train(), optimizer, device)
+        loss, acc = run_epoch(train_data, model.train(), optimizer, device, batch_size)
         print('Train loss: {:.6f} | Train accuracy: {:.6f}'.format(loss, acc))
         train_accuracies.append(acc)
 
         # Run **validation**
-        val_loss, val_acc = run_epoch(dev_data, model.eval(), optimizer, device)
+        val_loss, val_acc = run_epoch(dev_data, model.eval(), optimizer, device, batch_size)
         print('Val loss:   {:.6f} | Val accuracy:   {:.6f}'.format(val_loss, val_acc))
         val_accuracies.append(val_acc)
         # Save model
@@ -216,10 +216,17 @@ plt.show()
 #%% Evaluate the model on test data and save submission.cvs
 
 test_data = pd.read_csv("test.csv")
-
 X_test=test_data.to_numpy(dtype='float')
 
-# Scaling data to [0, 1]
+#Train model on the validation dataset
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, nesterov=True)
+
+for epoch in range(1, n_epochs+1):
+    print("-------------\nEpoch {}:\n".format(epoch))
+    loss, acc = run_epoch(X_dev_set, model.train(), optimizer, device, batch_size)
+    print('Train loss: {:.6f} | Train accuracy: {:.6f}'.format(loss, acc))
+
+# Scaling test data to [0, 1]
 X_test=X_test/np.max(X_test)
 X_test=X_test.reshape(-1, 1, img_pix, img_pix)
 
