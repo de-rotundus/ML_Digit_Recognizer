@@ -18,6 +18,7 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset, random_split
+from torchvision.transforms import v2
 
 from sklearn.metrics import confusion_matrix
 from matplotlib.colors import LogNorm
@@ -26,7 +27,7 @@ def compute_accuracy(predictions, y):
     """Computes the accuracy of predictions against the gold labels, y."""
     return np.mean(np.equal(predictions.numpy(), y.numpy()))
 
-def plot_digits(X, img_pix, n=1, labels_predict=np.array([None]), labels_act=np.array([None]), rnd=True):
+def plot_digits(X, img_pix=28, n=1, labels_predict=np.array([None]), labels_act=np.array([None]), rnd=True):
     """
     Plot n*n random digits from set X
     
@@ -45,10 +46,10 @@ def plot_digits(X, img_pix, n=1, labels_predict=np.array([None]), labels_act=np.
     for i in range(n*n):
         plt.subplot(n , n, i+1)
         if rnd:
-            indx=random.randint(0, X.shape[0]-1)
+            indx=random.randint(0, len(X)-1)
         else:
             indx=i
-        dig=X[indx, :].reshape(img_pix, img_pix)
+        dig=X[indx].reshape(img_pix, img_pix)
         plt.imshow(dig, cmap='gray_r')
         plt.axis('off')
         str_title=''
@@ -61,7 +62,6 @@ def plot_digits(X, img_pix, n=1, labels_predict=np.array([None]), labels_act=np.
     
 class Flatten(nn.Module):
     """A custom layer that views an input as 1D."""
-
     def forward(self, input):
         return input.view(input.size(0), -1)
 
@@ -78,7 +78,10 @@ class ImageDataset(Dataset):
     def __getitem__(self, idx):
         image = self.images[idx] 
         image = torch.from_numpy(image).float()
-        image = image.view(1, 28, 28) 
+        image = image.view(1, 28, 28)
+        
+        if self.transform is not None:
+            image=self.transform(image)
     
         if self.labels is not None:  
             label = torch.tensor(self.labels[idx])
@@ -156,10 +159,17 @@ img_pix=28
 X=all_data.drop(['label'], axis=1, inplace=False).to_numpy(dtype='float')
 # Scaling data to [0, 1]
 X=X/np.max(X)
-#plot_digits(X, img_pix, 3, labels_act=y)
 
-X_set = ImageDataset(X, y)
+# Set transform to augment data for training 
+transf = v2.RandomAffine(degrees=20, scale=(0.9, 1.1))
+X_set = ImageDataset(X, y, transform=transf)
+
+tmp_images = [X_set[i][0] for i in range(9)]
+tmp_labels = [X_set[i][1].numpy() for i in range(9)]
+plot_digits(tmp_images, n=3, labels_act=tmp_labels, rnd=False)
+
 X_train_set, X_dev_set=random_split(X_set, [0.9, 0.1], generator=torch.Generator().manual_seed(42))
+
 
 #%% Train model
 
