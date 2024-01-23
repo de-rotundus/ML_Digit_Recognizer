@@ -193,7 +193,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
 
 batch_size = 32
-n_epochs = 20
+n_epochs = 40
 train_acc, dev_acc=train_model(X_train_set, X_dev_set, 
                                model, device=device, 
                                nesterov=True, 
