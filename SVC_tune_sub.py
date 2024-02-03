@@ -20,6 +20,12 @@ from sklearn.decomposition import PCA
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import train_test_split
 
+try:
+    from sklearnex import patch_sklearn
+    patch_sklearn()
+except:
+    print('There is no scikit-learn-intelex, continue the script')
+
 def compute_test_acc_svm(test_y, pred_test_y):
     return np.mean(pred_test_y == test_y)
 

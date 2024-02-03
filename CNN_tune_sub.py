@@ -7,6 +7,7 @@ Convolution neural network for digit recognition on mnist dataset
 
 @author: ganchenko
 """
+import torch
 
 from tqdm import tqdm
 import numpy as np
@@ -14,7 +15,7 @@ import pandas as pd
 import seaborn as sns
 import random
 from matplotlib import pyplot as plt 
-import torch
+
 import torch.nn.functional as F
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset, random_split
