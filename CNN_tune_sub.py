@@ -135,7 +135,7 @@ def run_epoch(data, model, optimizer, device=torch.device('cpu'), batch_size=32)
         out = model(x)
 
         predictions = torch.argmax(out, dim=1)
-        batch_accuracies.append(compute_accuracy(predictions, y))
+        batch_accuracies.append(compute_accuracy(predictions.cpu(), y.cpu()))
 
         loss = F.cross_entropy(out, y)
         losses.append(loss.data.item())
@@ -191,9 +191,11 @@ model = nn.Sequential(
 ##################################
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+print('Program will run on: ', device)
 model = model.to(device)
 
-batch_size = 32
+batch_size = 128
 n_epochs = 40
 train_acc, dev_acc=train_model(X_train_set, X_dev_set, 
                                model, device=device, 
@@ -212,9 +214,9 @@ plt.show()
 #%% Analysis of prediction results on dev data
 indxs=np.arange(0,len(X))
 random.shuffle(indxs)
-out=model(torch.tensor(X[indxs[:10000]].reshape(-1,1,img_pix,img_pix), dtype=torch.float32))
+out=model(torch.tensor(X[indxs[:10000]].reshape(-1,1,img_pix,img_pix), dtype=torch.float).to(device))
 
-predictions = torch.argmax(out, dim=1).numpy()
+predictions = torch.argmax(out.cpu(), dim=1).numpy()
 confusion_mtx = confusion_matrix(predictions, y[indxs[:10000]])
 
 f,ax = plt.subplots(figsize=(8, 8))
@@ -243,9 +245,9 @@ X_test=X_test.reshape(-1, 1, img_pix, img_pix)
 
 model_eval=model.eval()
 
-out=model_eval(torch.tensor(X_test, dtype=torch.float32))
+out=model_eval(torch.tensor(X_test, dtype=torch.float).to(device))
     
-predict = torch.argmax(out, dim=1).numpy()
+predict = torch.argmax(out.cpu(), dim=1).numpy()
 
 predictions = [int(x) for x in predict]
 
